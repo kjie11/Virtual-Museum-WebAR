@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>My A-Frame Scene</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+
+
+  <script>
+    AFRAME.registerComponent('play-music', {
+        init: function () {
+
+      
+          
+          
+            var musicEl = document.querySelector('#music');
+            this.el.addEventListener('click', function () {
+            
+                musicEl.components.sound.playSound();
+            });
+        }
+      
+      
+        
+    });
+
+    AFRAME.registerComponent('pause-music', {
+        init: function () {
+            var musicEl = document.querySelector('#music');
+            this.el.addEventListener('click', function () {
+              console.log("clicked")
+                musicEl.components.sound.pauseSound();
+            });
+        }
+    });
+
+
+    AFRAME.registerComponent('button-action', {
+        init: function() {
+            
+          var self = this;
+            this.el.addEventListener('click', function(evt) {
+              if(self.el.getAttribute('id')=="right_shake"){
+                shakeGestureDetected("right");
+              
+                
+              }
+              else{
+                shakeGestureDetected("left");
+              }
+                
+            });
+        }
+    });
+    
+    
+</script>
+  <script>
+    let peak_x = 0;
+      // let peak_y = 0;
+      // let peak_z = 0;
+      // let count = 0;
+      let last_shake = 0;
+      let change_volume=0.2;  
+     function callbackMotion(event) {
+        let x = event.acceleration.x;
+        let y = event.acceleration.y;
+        let z = event.acceleration.z;
+
+        if (Math.abs(x) > 30 ) {
+          peak_x = x;
+        
+          if(peak_x<-30){
+       
+              var direction="left";
+            let now = Date.now();
+             
+            if (now - last_shake > 1500) {
+             
+               shakeGestureDetected("right");
+              last_shake = now;
+            }
+}
+            else if(peak_x>30){
+        
+                var direction="right";
+            let now = Date.now();
+             
+            if (now - last_shake > 1500) {
+               shakeGestureDetected("left");
+              last_shake = now;
+            }
+}
+       
+          if (now - last_shake > 1000) {
+           
+          }
+          
+         
+        } 
+      }
+    
+    
+    function roundNumber(x) {
+        return Math.round((x + Number.EPSILON) * 100) / 100;
+      }
+     function shakeGestureDetected(direction) {
+      
+
+       
+       adjust_music(direction);
+      
+      
+      }
+    
+    
+    
+    function adjust_music(direction){
+      peak_x = 0;
+      
+      var musicEl = document.querySelector('#music');
+      var currentVolume = musicEl.getAttribute('sound').volume;
+      if(direction=="right"){
+         var newVolume = currentVolume + change_volume;
+         newVolume = Math.max(0, Math.min(newVolume, 1));
+          newVolume=roundNumber(newVolume)
+        var volumePercentage=newVolume*100;
+        document.getElementById("current_volume").setAttribute('value',`${volumePercentage}%`);
+     musicEl.setAttribute('sound', `src: #my-music; volume: ${newVolume}; loop: true;`);
+         var slider=document.getElementById("volumeSlider");
+      var position = slider.getAttribute('position');
+      var slider_x=position.x;
+        // document.getElementById("playButton").setAttribute('color','pink');
+        var new_slider_x= slider_x+0.4;
+        if(new_slider_x>1){
+        new_slider_x=1;
+}
+        var positionString = new_slider_x + " 0 0.1";
+        document.getElementById("volumeSlider").setAttribute('position', positionString);
+        
+         document.getElementById("right_shake").setAttribute('color', '#' + Math.floor(Math.random()*16777215).toString(16));
+        
+      }
+      else{
+         document.getElementById("left_shake").setAttribute('color', '#' + Math.floor(Math.random()*16777215).toString(16));
+      
+      
+      var newVolume = currentVolume - change_volume;
+      newVolume = Math.max(0, Math.min(newVolume, 1));
+      newVolume=roundNumber(newVolume)
+       var volumePercentage=newVolume*100;
+        document.getElementById("current_volume").setAttribute('value',`${volumePercentage}%`);
+     musicEl.setAttribute('sound', `src: #my-music; volume: ${newVolume}; loop: true;`);
+      var slider=document.getElementById("volumeSlider");
+      var position = slider.getAttribute('position');
+      var slider_x=position.x;
+       
+        var new_slider_x= slider_x-0.4;
+      if(new_slider_x<-1){
+        new_slider_x=-1;
+}
+     var positionString = new_slider_x + " 0 0.1";
+
+
+document.getElementById("volumeSlider").setAttribute('position', positionString);
+      }
+      
+    }
+    
+     window.onload = function onLoad() {
+        window.addEventListener("devicemotion", callbackMotion);
+      };
+  </script>
+
+  <script>
+       
+        window.addEventListener('load', function() {
+            
+            var clickableImage = document.querySelector('#link_back');
+
+            
+            clickableImage.addEventListener('click', function () {
+                
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <a-scene>
+        <a-assets>
+    <audio id="my-music" src="https://cdn.glitch.global/7bbebee2-7df1-450a-96f9-4ab7aa500b6a/pureImagination.mp3?v=1708696182483"  crossorigin="anonymous"></audio>
+</a-assets>
+ <a-entity camera look-controls="enable:true; touchEnabled:false;" wasd-controls position="0 1.6 1" >
+        <a-entity cursor="fuse: true; fuseTimeout: 1000" 
+                  material="color: grey; shader: flat; opacity: 0.8;" position="0 0 -0.1" raycaster="objects: .clickable"
+                  geometry="primitive: ring; radiusInner: 0.002; radiusOuter: 0.004"
+                  animation__click="property: scale; startEvents: click; easing: easeInCubic; dur: 500; from: 0.2 0.2 0.2; to: 1 1 1"
+                  animation__fusing="property: scale; startEvents: fusing; easing: easeInCubic; dur: 800; from: 1 1 1; to: 0.2 0.2 0.2"
+                  animation__mouseleave="property: scale; startEvents: mouseleave; easing: easeInCubic; dur: 100; to: 1 1 1">
+        </a-entity>
+      </a-entity>
+
+<a-entity position="0 1.6 -3">
+   <a-text value="shake left or shake right" color="grey" position="-0.4 1.2 0" scale="2 2 2" width="2"></a-text>
+
+  <a-image src="https://cdn.glitch.global/7bbebee2-7df1-450a-96f9-4ab7aa500b6a/back.png?v=1708974525263" position="-1.2 1.2 0" class="clickable" id="link_back"  scale="0.5 0.5 0.5"></a-image>
+    <a-plane play-music id="playButton" class="clickable" position="-1 0 0" color="green" depth="0.2" height="0.5" width="1">
+        <a-text value="Play" align="center" color="#FFF" width="6"></a-text>
+    </a-plane>
+    <a-plane pause-music id="pauseButton" class="clickable" position="1 0 0" color="red" depth="0.2" height="0.5" width="1">
+        <a-text value="Pause" align="center" color="#FFF" width="6"></a-text>
+    </a-plane>
+</a-entity>
+  <a-plane id="left_shake" position="-0.8 2.2 -3" class="clickable" rotation="0 0 0" color="#4CC3D9" height="0.5" width="1.25"  button-action><a-text value="mock left shake"  position="-0.65 0 0.01" width="4"></a-text></a-plane>
+      
+      <a-plane id="right_shake" position="0.8 2.2 -3" class="clickable" rotation="0 0 0" color="#4CC3D9" height="0.5" width="1.25"  button-action><a-text value="mock right shake"  position="-0.65 0 0.01" width="4"></a-text></a-plane>
+
+      
+   <a-plane position="1 0.5 -3" color="transparent">
+
+     
+     <a-text value="volume: " color="black" width="2" position="-2 0.5 0">
+          <a-text id="current_volume" color="black" value="0" position="0.3 0 0" width="2"></a-text>
+     </a-text>
+    </a-plane>
+
+      <a-entity id="volumeControl" position="0 0.8 -2">
+    <a-box id="volumeBar" position="0 0 0" depth="0.1" height="0.2" width="2" color="#AAA"></a-box>
+    <a-box id="volumeSlider" position="1 0 0.1" depth="0.2" height="0.3" width="0.1" color="#22D" class="clickable"></a-box>
+</a-entity>
+      
+<a-entity  sound="src: #my-music; " id="music"></a-entity>
+       
+    </a-scene>
+</body>
+</html>

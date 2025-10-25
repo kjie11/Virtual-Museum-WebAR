@@ -1,0 +1,1 @@
+This program is a virtualgallery, you can exploring artworks by gazing, change background by speech control, additionaly, you can play music and adjust the volume, when you finish your experience for this galllery, you can exit to choose other gallerys.

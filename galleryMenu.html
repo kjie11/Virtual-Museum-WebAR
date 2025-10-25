@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gallery Menu</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+   <style>
+        #gestureArea {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; 
+            z-index: 999;
+
+          background:rgba(220, 220, 220, 0.01);
+        }
+    </style>
+</head>
+<body>
+   
+    <a-scene>
+        <a-assets>
+            <img id="gallery1" src="https://cdn.glitch.global/7bbebee2-7df1-450a-96f9-4ab7aa500b6a/VanGogh.jpg?v=1709592821440">
+            <img id="gallery2" src="https://cdn.glitch.global/7bbebee2-7df1-450a-96f9-4ab7aa500b6a/monet.jpeg?v=1709592686657">
+            <img id="gallery3" src="https://cdn.glitch.global/7bbebee2-7df1-450a-96f9-4ab7aa500b6a/Picasso.jpg?v=1709592646710">
+        </a-assets>
+        
+        
+          <a-image src="#gallery1" position="-1.2 1.5 -3" rotation="0 0 0" scale="1 1 1" class="selectable" id="Van Gallery"></a-image>
+            <a-text position="-1.7 0.6 -3" value="Vagh gallery" color="brown" width="4"></a-text>
+        <a-image src="#gallery2" position="0 1.5 -3" rotation="0 0 0" scale="1 1 1" class="selectable" id="Monet Gallery"></a-image>
+             <a-text position="-0.5 0.6 -3" value="Monet gallery" color="brown" width="4"></a-text>
+        <a-image src="#gallery3" position="1.2 1.5 -3" rotation="0 0 0" scale="1 1 1" class="selectable" id="Picasso Gallery"></a-image>
+       <a-text position="0.7 0.6 -3" value="Picasso gallery" color="brown" width="4"></a-text>
+        
+
+        <a-camera look-controls="enable:false; touchEnabled:false;"  position="0 0 1">
+           
+        </a-camera>
+    </a-scene>
+ 
+
+<div id="gestureArea">
+  <div id="detected">detected: </div>
+  <div id="selected_gallery">Selected gallery and draw "√" to comfirm</div>
+  <button id="link" onclick="back()" style="width: 80px;
+    height: 30px; 
+     background-color:pink;
+    margin-top:5px;
+     margin-left:5px;
+    font-size:20px;
+    border: none; 
+    z-index: 1000;">Back</button>
+</div>
+
+    <script>
+  const gestureArea = document.getElementById('gestureArea');
+let points = [];
+let isDrawing = false;
+let start_position=[];
+let end_position=[];
+let minY=0;
+let startTime = 0; 
+let endTime = 0;
+let duration=0;
+
+gestureArea.addEventListener('mousedown', (e) => {
+    startDrawing(e.offsetX, e.offsetY);
+});
+gestureArea.addEventListener('mousemove', (e) => {
+    if (isDrawing) {
+        points.push([e.offsetX, e.offsetY]);
+    }
+});
+gestureArea.addEventListener('mouseup', endDrawing);
+
+
+gestureArea.addEventListener('touchstart', (e) => {
+    e.preventDefault(); 
+    const touch = e.touches[0];
+    startDrawing(touch.clientX, touch.clientY);
+});
+gestureArea.addEventListener('touchmove', (e) => {
+    if (isDrawing) {
+        const touch = e.touches[0];
+        points.push([touch.clientX, touch.clientY]);
+    }
+});
+gestureArea.addEventListener('touchend', endDrawing);
+
+function startDrawing(x, y) {
+    isDrawing = true;
+    points = []; 
+    points.push([x, y]);
+    startTime = Date.now();
+}
+
+function endDrawing() {
+    isDrawing = false;
+     endTime = Date.now(); 
+    
+    
+    duration = endTime - startTime;
+    
+  
+    start_position=getStartPosition();
+    minY=getMiddlePosition();
+    end_position=getEndPosition();
+   detectGesture(points);
+  
+}
+
+   function getEndPosition(){
+        var end=points[points.length-1];
+        var end_x=Math.round(end[0]);
+        var end_y=Math.round(end[1]);
+        var end_pos=[end_x,end_y];
+         return end_pos;
+      }
+  function getStartPosition(){
+    var start=points[0];
+     var start_x=Math.round(start[0]);
+    var start_y=Math.round(start[1]);
+    var start_pos=[start_x,start_y];
+     return start_pos;
+    
+  }
+  function getMiddlePosition(){
+    let y_min = 0; 
+
+    points.forEach(point => {
+        let point_y = point[1]; 
+        if(point_y > y_min) {
+            y_min = point_y;
+          console.log(y_min)
+        }
+    });
+    return Math.round(y_min);
+    
+  }
+function detectGesture(points) {
+  var start_x=start_position[1];
+  var end_x=end_position[1];
+  var start_min=-(start_position[1]-minY);
+  var end_min=-(end_position[1]-minY);
+ 
+    if(end_position[0]-start_position[0]>100){
+      
+      if(start_min>70&&end_min>70){
+        if(duration<550){
+           document.getElementById('detected').textContent = "detected: true";
+            var selectedElement = document.querySelector('.selected');
+          var id = selectedElement.id;
+          
+           document.getElementById('selected_gallery').textContent = `Select: ${id}`;
+
+        }
+        else{
+          document.getElementById('detected').textContent = "detected time: false";
+        }
+      }
+      else{
+         document.getElementById('detected').textContent = "detected y axis: false";
+      }
+      
+     
+      
+
+    }
+  else{
+    document.getElementById('detected').textContent = "detected: false";
+  }
+    console.log("Gesture recorded. Analysis needed to confirm if it's a triangle.");
+    console.log(points)
+}
+
+
+
+</script>
+    <script>
+        
+        function selectGallery(angle) {
+       
+             var selectedOption;
+             if(angle > -90&&angle<-25) {
+                selectedOption = 'Van Gallery';
+            } else if(angle>25 &&angle<90) {
+                selectedOption = 'Picasso Gallery';
+            } else {
+                selectedOption = 'Monet Gallery';
+            }
+            document.querySelectorAll('.selectable').forEach(function(el) {
+                if(el.id === selectedOption) {
+                    el.emit('select');
+                  el.classList.add("selected");
+                } else {
+                    el.emit('deselect');
+                  el.classList.remove("selected");
+                }
+            });
+        }
+
+        document.querySelectorAll('.selectable').forEach(function(el) {
+            el.addEventListener('select', function() {
+                el.setAttribute('scale', '1.2 1.2 1');
+            });
+            el.addEventListener('deselect', function() {
+                el.setAttribute('scale', '1 1 1');
+            });
+        });
+        
+        if(window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', function(event) {
+                var angle = event.gamma; 
+              // document.getElementById("alpha_value").setAttribute('value',alpha)
+                selectGallery(angle);
+            });
+        }
+    </script>
+  <script>
+      
+      window.addEventListener('load', function() {
+       
+          var clickableImage = document.querySelector('#link');
+
+        
+          clickableImage.addEventListener('click', function () {
+              
+              window.location.href = 'index.html';
+          });
+      });
+</script>
+</body>
+</html>
